@@ -12,7 +12,9 @@
 
 :triangular_flag_on_post: **Updates**  
 
-&#9745; The training and testing codes on Scannet are released.
+&#9745; The training and testing codes on ARKitScenes are released on git branch 'arkit'.
+
+&#9745; The training and testing codes on Scannet are released on git branch 'main'.
 
 &#9745; The pretrained models and training logs are released at [here](https://huggingface.co/YangCaoCS/VGGT-Det-Pretrained-Models). 
 
