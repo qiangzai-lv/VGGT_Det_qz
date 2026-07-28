@@ -3,13 +3,11 @@ from pathlib import Path
 
 import hydra
 import torch
-import wandb
 from colorama import Fore
 from jaxtyping import install_import_hook
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig
 from pytorch_lightning import Trainer
-from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
-from pytorch_lightning.loggers.wandb import WandbLogger
+from pytorch_lightning.callbacks import ModelCheckpoint
 
 # Configure beartype and jaxtyping.
 with install_import_hook(
@@ -22,7 +20,6 @@ with install_import_hook(
     from src.loss import get_losses
     from src.misc.LocalLogger import LocalLogger
     from src.misc.step_tracker import StepTracker
-    from src.misc.wandb_tools import update_checkpoint_path
     from src.model.decoder import get_decoder
     from src.model.encoder import get_encoder
     from src.model.model_wrapper import ModelWrapper
@@ -51,25 +48,8 @@ def train(cfg_dict: DictConfig):
     os.system(f"rm {latest_run}")
     os.system(f"ln -s {output_dir} {latest_run}")
 
-    # Set up logging with wandb.
     callbacks = []
-    if cfg_dict.wandb.mode != "disabled":
-        logger = WandbLogger(
-            project=cfg_dict.wandb.project,
-            mode=cfg_dict.wandb.mode,
-            name=f"{cfg_dict.wandb.name} ({output_dir.parent.name}/{output_dir.name})",
-            tags=cfg_dict.wandb.get("tags", None),
-            log_model="all",
-            save_dir=output_dir,
-            config=OmegaConf.to_container(cfg_dict),
-        )
-        callbacks.append(LearningRateMonitor("step", True))
-
-        # On rank != 0, wandb.run is None.
-        if wandb.run is not None:
-            wandb.run.log_code("src")
-    else:
-        logger = LocalLogger()
+    logger = LocalLogger()
 
     # Set up checkpointing.
     callbacks.append(
@@ -81,7 +61,9 @@ def train(cfg_dict: DictConfig):
     )
 
     # Prepare the checkpoint for loading.
-    checkpoint_path = update_checkpoint_path(cfg.checkpointing.load, cfg.wandb)
+    checkpoint_path = (
+        Path(cfg.checkpointing.load) if cfg.checkpointing.load is not None else None
+    )
 
     # This allows the current step to be shared with the data loader processes.
     step_tracker = StepTracker()

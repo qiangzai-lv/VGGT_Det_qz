@@ -20,7 +20,6 @@ with install_import_hook(
     from src.geometry.projection import homogenize_points, project
     from src.global_cfg import set_cfg
     from src.misc.image_io import save_image
-    from src.misc.wandb_tools import update_checkpoint_path
     from src.model.decoder import get_decoder
     from src.model.decoder.cuda_splatting import render_cuda_orthographic
     from src.model.encoder import get_encoder
@@ -62,7 +61,7 @@ def generate_point_cloud_figure(cfg_dict):
     device = torch.device("cuda:0")
 
     # Prepare the checkpoint for loading.
-    checkpoint_path = update_checkpoint_path(cfg.checkpointing.load, cfg.wandb)
+    checkpoint_path = Path(cfg.checkpointing.load)
 
     encoder, encoder_visualizer = get_encoder(cfg.model.encoder)
     decoder = get_decoder(cfg.model.decoder, cfg.dataset)

@@ -4,18 +4,15 @@ from typing import Optional, Protocol, runtime_checkable
 
 import moviepy.editor as mpy
 import torch
-import wandb
 from einops import pack, rearrange, repeat
 from jaxtyping import Float
 from pytorch_lightning import LightningModule
-from pytorch_lightning.loggers.wandb import WandbLogger
 from pytorch_lightning.utilities import rank_zero_only
 from torch import Tensor, nn, optim
 
 from ..dataset.data_module import get_data_shim
 from ..dataset.types import BatchedExample
 from ..evaluation.metrics import compute_lpips, compute_psnr, compute_ssim
-from ..global_cfg import get_cfg
 from ..loss import Loss
 from ..misc.benchmarker import Benchmarker
 from ..misc.image_io import prep_image, save_image
@@ -68,7 +65,7 @@ class TrajectoryFn(Protocol):
 
 
 class ModelWrapper(LightningModule):
-    logger: Optional[WandbLogger]
+    logger: Optional[LocalLogger]
     encoder: nn.Module
     encoder_visualizer: Optional[EncoderVisualizer]
     decoder: Decoder
@@ -178,16 +175,14 @@ class ModelWrapper(LightningModule):
 
         # Save images.
         (scene,) = batch["scene"]
-        name = get_cfg()["wandb"]["name"]
-        path = self.test_cfg.output_path / name
+        path = self.test_cfg.output_path
         for index, color in zip(batch["target"]["index"][0], output.color[0]):
             save_image(color, path / scene / f"color/{index:0>6}.png")
 
     def on_test_end(self) -> None:
-        name = get_cfg()["wandb"]["name"]
-        self.benchmarker.dump(self.test_cfg.output_path / name / "benchmark.json")
+        self.benchmarker.dump(self.test_cfg.output_path / "benchmark.json")
         self.benchmarker.dump_memory(
-            self.test_cfg.output_path / name / "peak_memory.json"
+            self.test_cfg.output_path / "peak_memory.json"
         )
 
     @rank_zero_only
@@ -451,23 +446,14 @@ class ModelWrapper(LightningModule):
         video = (video.clip(min=0, max=1) * 255).type(torch.uint8).cpu().numpy()
         if loop_reverse:
             video = pack([video, video[::-1][1:-1]], "* c h w")[0]
-        visualizations = {
-            f"video/{name}": wandb.Video(video[None], fps=30, format="mp4")
-        }
-
-        # Since the PyTorch Lightning doesn't support video logging, log to wandb directly.
-        try:
-            wandb.log(visualizations)
-        except Exception:
-            assert isinstance(self.logger, LocalLogger)
-            for key, value in visualizations.items():
-                tensor = value._prepare_video(value.data)
-                clip = mpy.ImageSequenceClip(list(tensor), fps=value._fps)
-                dir = LOG_PATH / key
-                dir.mkdir(exist_ok=True, parents=True)
-                clip.write_videofile(
-                    str(dir / f"{self.global_step:0>6}.mp4"), logger=None
-                )
+        clip = mpy.ImageSequenceClip(
+            list(rearrange(video, "f c h w -> f h w c")), fps=30
+        )
+        video_dir = LOG_PATH / "video" / name
+        video_dir.mkdir(exist_ok=True, parents=True)
+        clip.write_videofile(
+            str(video_dir / f"{self.global_step:0>6}.mp4"), logger=None
+        )
 
     def configure_optimizers(self):
         optimizer = optim.Adam(self.parameters(), lr=self.optimizer_cfg.lr)

@@ -106,7 +106,7 @@ model = dict(
 dataset_type = 'MultiViewScanNetDataset'
 # Configure the data_root path to your dataset location
 # data_root = '/path/to/your/scannet/data/'
-data_root = './data/scannet/'
+data_root = '/mnt/workspace/data/ScanNet_processed/'
 
 
 class_names = [
@@ -313,12 +313,6 @@ default_hooks = dict(
 
 
 
-vis_backends = [dict(type='LocalVisBackend'), dict(type='WandbVisBackend', init_kwargs={
-            'project': 'vggt_det',
-            'group': 'baseline',
-            'entity':'3dv_team', 
-            'name': '4layer_scannet_axis_no_norm_predpc_c2lr_400e_atten_fps_lmdis_08_one2more_matching_task_query_again',
-            'notes': 'debug'
-         })]
+vis_backends = [dict(type='LocalVisBackend')]
 visualizer = dict(
     type='Det3DLocalVisualizer', vis_backends=vis_backends, name='visualizer')

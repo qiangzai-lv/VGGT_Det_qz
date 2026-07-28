@@ -4,7 +4,6 @@ from typing import Optional
 
 import numpy as np
 import torch
-import wandb
 from einops import rearrange, reduce, repeat
 from jaxtyping import Bool, Float
 from torch import Tensor
@@ -84,10 +83,8 @@ class EncoderVisualizerEpipolar(
                 rw=scale_multiplier,
             )
 
-        # This is kind of hacky for now, since we're using it for short experiments.
-        if self.cfg.export_ply and wandb.run is not None:
-            name = wandb.run._name.split(" ")[0]
-            ply_path = Path(f"outputs/gaussians/{name}/{global_step:0>6}.ply")
+        if self.cfg.export_ply:
+            ply_path = Path(f"outputs/gaussians/{global_step:0>6}.ply")
             export_ply(
                 context["extrinsics"][0, 0],
                 result.means[0],

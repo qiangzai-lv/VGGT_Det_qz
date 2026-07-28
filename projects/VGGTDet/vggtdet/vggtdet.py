@@ -174,7 +174,7 @@ class VGGTDet(Base3DDetector):
         bbox_head.update(test_cfg=test_cfg)
         self.bbox_head = MODELS.build(bbox_head)
         
-        self.vggt_encoder = VGGT.from_pretrained("facebook/VGGT-1B").to(device)
+        self.vggt_encoder = VGGT.from_pretrained("/mnt/workspace/pretrain/VGGT-1B").to(device)
 
         for param in self.vggt_encoder.parameters():
             param.requires_grad = False

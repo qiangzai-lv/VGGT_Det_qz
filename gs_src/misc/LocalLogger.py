@@ -39,8 +39,7 @@ class LocalLogger(Logger):
         step: Optional[int] = None,
         **kwargs,
     ):
-        # The function signature is the same as the wandb logger's, but the step is
-        # actually required.
+        # The local logger requires an explicit step for file naming.
         assert step is not None
         for index, image in enumerate(images):
             path = LOG_PATH / f"{key}/{index:0>2}_{step:0>6}.png"

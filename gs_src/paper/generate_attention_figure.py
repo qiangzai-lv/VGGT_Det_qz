@@ -18,7 +18,6 @@ with install_import_hook(
     from src.dataset import get_dataset
     from src.dataset.view_sampler.view_sampler_arbitrary import ViewSamplerArbitraryCfg
     from src.global_cfg import set_cfg
-    from src.misc.wandb_tools import update_checkpoint_path
     from src.model.decoder import get_decoder
     from src.model.encoder import get_encoder
     from src.model.model_wrapper import ModelWrapper
@@ -64,7 +63,7 @@ def generate_attention_figure(cfg_dict):
     device = torch.device("cuda:0")
 
     # Prepare the checkpoint for loading.
-    checkpoint_path = update_checkpoint_path(cfg.checkpointing.load, cfg.wandb)
+    checkpoint_path = Path(cfg.checkpointing.load)
 
     encoder, encoder_visualizer = get_encoder(cfg.model.encoder)
     model_wrapper = ModelWrapper.load_from_checkpoint(

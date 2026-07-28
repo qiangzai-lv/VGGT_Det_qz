@@ -30,9 +30,8 @@ class Det3DVisualizationHook(Hook):
         need to be saved to ``test_out_dir``. In order to avoid vis_backends
         also storing data, so ``vis_backends`` needs to be excluded.
     3. ``vis_backends`` takes effect if the user does not specify ``show``
-        and `test_out_dir``. You can set ``vis_backends`` to WandbVisBackend or
-        TensorboardVisBackend to store the prediction result in Wandb or
-        Tensorboard.
+        and `test_out_dir``. You can set ``vis_backends`` to a compatible
+        visualization backend to store the prediction result externally.
 
     Args:
         draw (bool): whether to draw prediction results. If it is False,
