@@ -9,8 +9,8 @@ import torch.nn.functional as F
 import numpy as np
 import torch
 import torch.nn as nn
-from third_party_pointnet2.pointnet2.pointnet2_modules import PointnetSAModuleVotes
-from third_party_pointnet2.pointnet2.pointnet2_utils import furthest_point_sample
+from pointnet2_compat import PointnetSAModuleVotes, furthest_point_sample
+from vggt.utils.device import get_device_type
 from utils.pc_util import scale_points, shift_scale_points
 from torchvision.transforms import Resize
 from models.helpers import GenericMLP
@@ -270,7 +270,7 @@ class Model3DETRPredictedBoxDistillationHead(nn.Module):
 
             print('-------------------load class prompt from ----------------------')
             print(select_class_path)
-            self.device = "cuda" if torch.cuda.is_available() else "cpu"
+            self.device = get_device_type()
 
             self.train_range_max = args.train_range_max
             self.test_range_max = args.test_range_max
@@ -571,9 +571,12 @@ class Model3DETRPredictedBoxDistillationHead(nn.Module):
             outputs["box_corners"] = inputs['gt_box_corners'].clone().detach()
             # outputs['sem_cls_prob'] = torch.zeros((batch_size, 64, 690)).to('cuda')
             if if_cmp_class:
-                outputs['sem_cls_prob'] = torch.zeros((batch_size, 64, len(self.all_cmp_classes_keys))).to('cuda')
+                outputs['sem_cls_prob'] = torch.zeros(
+                    (batch_size, 64, len(self.all_cmp_classes_keys)),
+                    device=box_size_batch.device)
             else:
-                outputs['sem_cls_prob'] = torch.zeros((batch_size, 64, self.test_range_max)).to('cuda')
+                outputs['sem_cls_prob'] = torch.zeros(
+                    (batch_size, 64, self.test_range_max), device=box_size_batch.device)
             outputs['objectness_prob'] = inputs["gt_box_present"].clone().detach()  # torch.ones((8, 64)).to('cuda')
             x_offset_batch = inputs['x_offset']
             y_offset_batch = inputs['y_offset']
@@ -1986,7 +1989,7 @@ class Model3DETRMultiClassHead(nn.Module):
                 all_classes_keys = list(all_classes.keys())[10:37]
             else:
                 all_classes_keys = list(all_classes.keys())[:args.test_range_max]#[:dataset_config.num_semcls]
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = get_device_type()
         all_cmp_classes_keys = list(all_cmp_classes)
         self.test_range_max =  args.test_range_max
         print(len(all_classes_keys))
@@ -2260,7 +2263,8 @@ class Model3DETRMultiClassHead(nn.Module):
             outputs['size_unnormalized'] = inputs['gt_box_sizes']
             outputs["box_corners"] = inputs['gt_box_corners']
             # outputs['sem_cls_prob'] = torch.zeros((batch_size, 64, 690)).to('cuda')
-            outputs['sem_cls_prob'] = torch.zeros((batch_size, 64, 238)).to('cuda')
+            outputs['sem_cls_prob'] = torch.zeros(
+                (batch_size, 64, 238), device=box_size_batch.device)
             outputs['objectness_prob'] = inputs["gt_box_present"].clone().detach() #torch.ones((8, 64)).to('cuda')
 
             # print(outputs['objectness_prob'].shape)
@@ -2544,7 +2548,8 @@ class Model3DETRMultiClassHead(nn.Module):
             outputs['size_unnormalized'] = inputs['gt_box_sizes']
             outputs["box_corners"] = inputs['gt_box_corners']
             # outputs['sem_cls_prob'] = torch.zeros((batch_size, 64, 690)).to('cuda')
-            outputs['sem_cls_prob'] = torch.zeros((batch_size, 64, 238)).to('cuda')
+            outputs['sem_cls_prob'] = torch.zeros(
+                (batch_size, 64, 238), device=box_size_batch.device)
             outputs['objectness_prob'] = inputs["gt_box_present"].clone().detach() #torch.ones((8, 64)).to('cuda')
             x_offset_batch = inputs['x_offset'].cpu().numpy()
             y_offset_batch = inputs['y_offset'].cpu().numpy()
@@ -4070,5 +4075,3 @@ def build_3detr_multiclasshead(args, dataset_config):
     )
     output_processor = BoxProcessor(dataset_config)
     return model, output_processor
-
-

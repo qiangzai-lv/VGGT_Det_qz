@@ -7,6 +7,7 @@
 import torch
 import torch.nn as nn
 from huggingface_hub import PyTorchModelHubMixin  # used for model hub
+from vggt.utils.device import autocast
 
 from vggt.models.aggregator import Aggregator
 from vggt.heads.camera_head import CameraHead
@@ -64,7 +65,7 @@ class VGGT(nn.Module, PyTorchModelHubMixin):
 
         predictions = {}
 
-        with torch.cuda.amp.autocast(enabled=False):
+        with autocast(enabled=False):
             if self.camera_head is not None:
                 pose_enc_list = self.camera_head(aggregated_tokens_list)
                 predictions["pose_enc"] = pose_enc_list[-1]  # pose encoding of the last iteration

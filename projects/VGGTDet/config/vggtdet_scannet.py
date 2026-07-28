@@ -17,7 +17,7 @@ _decoder_layer_num = 8
 model = dict(
     type='VGGTDet',
     near_far_range=[0.2, 5.0],
-    rgb_supervision = True, # TODO for nvs
+    rgb_supervision = False,
     depth_supervise=False, # add depth loss in the training.
     use_nerf_mask=False,
     gs_cfg = dict(
@@ -196,7 +196,7 @@ test_pipeline = [
     dict(type='PointSample', num_points=n_points),
     dict(
         type='MultiViewPipeline_Tgt',
-        n_images=81,
+        n_images=41,
         transforms=[
             dict(type='LoadImageFromFile', file_client_args=file_client_args),
             dict(type='Resize', scale=(448, 448), keep_ratio=True, interpolation='bicubic'),
@@ -218,7 +218,7 @@ test_pipeline = [
 ]
 
 train_dataloader = dict(
-    batch_size=10,
+    batch_size=1,
     num_workers=8,
     persistent_workers=True,
     sampler=dict(type='DefaultSampler', shuffle=True),

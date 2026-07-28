@@ -10,13 +10,10 @@ import numpy as np
 from scipy.spatial import ConvexHull, Delaunay
 from projects.VGGTDet.detr3_models.utils.misc import to_list_1d, to_list_3d
 
-# try:
-from projects.VGGTDet.detr3_models.utils.box_intersection import box_intersection
-# except ImportError:
-#     print(
-#         "Could not import cythonized box intersection. Consider compiling box_intersection.pyx for faster training."
-#     )
-#     box_intersection = None
+try:
+    from projects.VGGTDet.detr3_models.utils.box_intersection import box_intersection
+except ImportError:
+    box_intersection = None
 
 
 def in_hull(p, hull):

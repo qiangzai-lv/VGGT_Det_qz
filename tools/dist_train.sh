@@ -8,16 +8,6 @@ PORT=${PORT:-26119}
 MASTER_ADDR=${MASTER_ADDR:-"127.0.0.1"}
 
 
-# 设置显存使用阈值（单位：MiB）
-
-pkill -9 python
-
-pkill -9 -f train.py
-
-nvidia-smi --query-compute-apps=pid,used_memory --format=csv,noheader,nounits
-
-
-
 PYTHONPATH="$(dirname $0)/..":$PYTHONPATH \
 python -m torch.distributed.launch \
     --nnodes=$NNODES \

@@ -899,7 +899,7 @@ class MVSDet(Base3DDetector):
         top_vals, top_inds = torch.topk(torch.neg(reprojection_volume), k=1, sorted=False)
         top_vals = torch.neg(top_vals)
         # top_mask = top_vals < (1e4 * torch.ones_like(top_vals, device=device))
-        top_mask = top_vals < (1e4 * torch.ones_like(top_vals).cuda())
+        top_mask = top_vals < (1e4 * torch.ones_like(top_vals))
         top_mask = top_mask.float()
         top_vals = torch.mul(top_vals, top_mask)
         # print('top_vals: {}'.format(top_vals.shape))
@@ -1316,7 +1316,7 @@ def get_camera_params(uv, pose, intrinsics):
 
     batch_size, num_samples, _ = uv.shape
 
-    depth = torch.ones((batch_size, num_samples)).cuda()
+    depth = torch.ones((batch_size, num_samples), device=uv.device)
     x_cam = uv[:, :, 0].view(batch_size, -1) # (bs, num_ray)
     y_cam = uv[:, :, 1].view(batch_size, -1)
     z_cam = depth.view(batch_size, -1)
@@ -1335,7 +1335,7 @@ def get_camera_params(uv, pose, intrinsics):
 
 def lift(x, y, z, intrinsics):
     # parse intrinsics. project image coord to cam coord, with Z=1. suitable for bs > 1
-    intrinsics = intrinsics.cuda()
+    intrinsics = intrinsics.to(x.device)
     fx = intrinsics[:, 0, 0]
     fy = intrinsics[:, 1, 1]
     cx = intrinsics[:, 0, 2]
@@ -1346,7 +1346,7 @@ def lift(x, y, z, intrinsics):
     y_lift = (y - cy.unsqueeze(-1)) / fy.unsqueeze(-1) * z
 
     # homogeneous
-    return torch.stack((x_lift, y_lift, z, torch.ones_like(z).cuda()), dim=-1)
+    return torch.stack((x_lift, y_lift, z, torch.ones_like(z)), dim=-1)
 
 
 @torch.no_grad()
@@ -1690,5 +1690,4 @@ def get_extrinsics(angles):
     extrinsic[:3, :3] = r
     extrinsic[3, 3] = 1.
     return extrinsic
-
 

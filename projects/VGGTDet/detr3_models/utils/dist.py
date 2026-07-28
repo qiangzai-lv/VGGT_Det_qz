@@ -3,6 +3,7 @@ import pickle
 
 import torch
 import torch.distributed as dist
+from vggt.utils.device import get_device_type
 
 
 def is_distributed():
@@ -49,7 +50,11 @@ def setup_print_for_distributed(is_primary):
 
 
 def init_distributed(gpu_id, global_rank, world_size, dist_url, dist_backend):
-    torch.cuda.set_device(gpu_id)
+    if get_device_type() == 'npu':
+        torch.npu.set_device(gpu_id)
+        dist_backend = 'hccl'
+    else:
+        torch.cuda.set_device(gpu_id)
     print(
         f"| distributed init (rank {global_rank}) (world {world_size}): {dist_url}",
         flush=True,

@@ -10,6 +10,7 @@ from typing import List, Optional
 
 import torch
 from torch.nn import functional as F
+from vggt.utils.device import autocast, get_amp_dtype
 
 try:
     from apex.normalization.fused_layer_norm import fused_layer_norm_affine
@@ -46,10 +47,10 @@ def fast_group_norm(
         # normally native AMP casts GN inputs to float32
         # here we use the low precision autocast dtype
         # FIXME what to do re CPU autocast?
-        dt = torch.get_autocast_gpu_dtype()
+        dt = get_amp_dtype()
         x, weight, bias = x.to(dt), weight.to(dt), bias.to(dt)
 
-    with torch.cuda.amp.autocast(enabled=False):
+    with autocast(enabled=False):
         return F.group_norm(x, num_groups, weight, bias, eps)
 
 
@@ -70,9 +71,9 @@ def fast_layer_norm(
     if torch.is_autocast_enabled():
         # normally native AMP casts LN inputs to float32
         # apex LN does not, this is behaving like Apex
-        dt = torch.get_autocast_gpu_dtype()
+        dt = get_amp_dtype()
         # FIXME what to do re CPU autocast?
         x, weight, bias = x.to(dt), weight.to(dt), bias.to(dt)
 
-    with torch.cuda.amp.autocast(enabled=False):
+    with autocast(enabled=False):
         return F.layer_norm(x, normalized_shape, weight, bias, eps)
