@@ -196,7 +196,7 @@ test_pipeline = [
     dict(type='PointSample', num_points=n_points),
     dict(
         type='MultiViewPipeline_Tgt',
-        n_images=41,
+        n_images=81,
         transforms=[
             dict(type='LoadImageFromFile', file_client_args=file_client_args),
             dict(type='Resize', scale=(448, 448), keep_ratio=True, interpolation='bicubic'),
